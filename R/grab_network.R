@@ -113,10 +113,3 @@ get_coauthors <- function(scholar_id, n_coauthors) {
     coauthors_href = coauthor_href
   )
 }
-
-clean_network <- function(network, n_coauthors) {
-  purrr::reduce(
-    purrr::transpose(
-      purrr::map(network, purrr::safely(get_coauthors), n_coauth = n_coauthors))$result,
-    rbind)
-}
