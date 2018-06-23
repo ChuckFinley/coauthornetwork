@@ -9,6 +9,9 @@
 #' out of control very quickly if \code{n_deep} is set to \code{2} or above. The preferred number is \code{1}, the default.
 #'
 #' @return A \code{tibble} with the all authors and coauthors.
+#'
+#' @importFrom dplyr %>%
+#'
 #' @export
 #'
 #' @examples
