@@ -26,20 +26,31 @@ grab_network <- function(scholar_id, n_coauthors = 5, n_deep = 1) {
 
   stopifnot(is.numeric(n_deep), length(n_deep) >= 1, n_deep != 0)
   stopifnot(is.numeric(n_coauthors), length(n_coauthors) >= 1, n_coauthors != 0)
-  all_coauthors <- get_coauthors(scholar_id, n_coauthors)
 
-  empty_network <- purrr::rerun(n_deep, list())
+  grab_network2(scholar_id, n_coauthors, n_deep)
+}
 
-  for (i in seq_len(n_deep)) {
-    if (i == 1)  {
-      empty_network[[i]] <- clean_network(all_coauthors$coauthors_href, n_coauthors)
-    } else {
-      empty_network[[i]] <- clean_network(empty_network[[i - 1]]$coauthors_href, n_coauthors)
-    }
+# Recursively grab networks
+grab_network2 <- function(scholar_id, n_coauthors, n_deep) {
+
+  # Grab network for current scholar
+  network <- purrr::safely(get_coauthors)(scholar_id, n_coauthors)$result
+
+  # Terminal conditions (n_deep run out or no new coauthors)
+  if (n_deep == 0 || nrow(network) == 0) {
+    return(network)
   }
 
-  final_network <- rbind(all_coauthors, purrr::reduce(empty_network, rbind))
-  final_network
+  # Recursive step
+  # Map grab_network2 onto list of coauthors, decrementing n_deep
+  purrr::map(network$coauthors_href,
+             grab_network2,
+             n_coauthors,
+             n_deep - 1) %>%
+    # Bind list of data.frames into one data.frame
+    dplyr::bind_rows() %>%
+    # Prepend the accumulated network
+    rbind(network, .)
 }
 
 # Recursively try to GET Google Scholar Page
